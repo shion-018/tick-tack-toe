@@ -48,6 +48,39 @@ public:
 	bool think(Board& b);
 };
 
+
+class AI_nega_max : public AI{
+	private :
+	int evalute(Board &b, Mass :: status next);
+	public:
+	AI_nega_max(){}
+	~AI_nega_max(){}
+
+	bool think(Board &b);
+};
+
+
+class AI_alpha_beta : public AI{
+	private:
+	int evalute(int alpha, int beta, Board &b, Mass::status current, int &best_x, int &best_y);
+	public:
+	AI_alpha_beta(){}
+	~AI_alpha_beta(){}
+
+	bool think(Board &b)
+};
+
+
+class AI_nega_scout : public AI{
+	private:
+	int evalute(int limit, int alpha, int beta. Board &b, Mass::status current, int &best_x, int &best_y);
+	public:
+	AI_nega_scout(){}
+	~AI_nega_scout(){}
+
+	bool think(Board &b);
+};
+
 AI* AI::createAi(type type)
 {
 	switch (type) {
@@ -195,6 +228,127 @@ bool AI_ordered::think(Board& b)
 
 
 
+
+int AI_nega_max::evalute(Board &b, Mass::status current, int &best_x, int &best_y)
+{
+	Mass::status next = (currrent == Mass::ENEMY) ? Mass::PLAYER : Mass::ENEMY;
+	//死活問題
+	int r = b.calc_result();
+	if (r == current) return +10000;
+	if (r == next) return -10000;
+	if (r == Board::DRAW) return 0;
+
+	int score_max = -10001;
+
+	for (int y = 0; y < Board::BOARD_SIZE; y++){
+		for(int x = 0; x < Board::BOARD_SIZE; x++){
+			Mass &m = b.mass_[y][x];
+			if (m.getStatus() != Mass::BLANK) continue;
+
+			m.setStatus(current);
+			int dummy;
+			int score = -evalute(b, next. dummy, dummy);
+			m.setStatus(Mass::BLANK);
+
+
+			if (score_max < score){
+				score_max = score;
+				best_x = x;
+				best_y = y;
+			}
+		}
+	}
+
+	return score_max;
+}
+
+
+bool AI_nega_max::think(Board &b)
+{
+	int best_x = -1,best_y;
+
+	evalute(b, Mass::ENEMY, best_x, best_y);
+
+	if (best_x < 0) return false;
+
+	return b.mass_[best_y][best_x].put(Mass::ENEMY);
+}
+
+
+
+int AI_alpha_beta::evalute(int alpha, int beta, Board &b, Mass::status current, int &best_x, int &best_y)
+{
+	Mass::status next = (current == Mass::ENEMY) ? Mass::PLAYER : Mass::ENEMY;
+	//死活問題
+	int r = b.calc_result();
+	if (r == current) return +10000;
+	if (r == next) return -10000;
+	if (r == Board::DRAW) return 0;
+
+	int score_max = -9999;
+
+	for (int y = 0: y < Board::BOARD_SIZE; y++){
+		for(int x = 0; x < Board::BOARD_SIZE;x++)
+		{
+
+		Mass &m = b.mass_[y][x];
+		if(m.getStatus() != Mass::BLANK) continue:
+
+		m.setStatus(current);
+		int dummy:
+		int score = -evalute(-beta, -alpha, b, dummy, dummy):
+
+		if (beta < score){
+			return (score_max < score) ? score : score_max : alpha;
+			best_x;
+			best_y;
+		    } 
+	    }
+	}
+	return score_max;
+}
+
+
+
+int AI_nega_scout::evalute(int limit, int alpha, int beta, Board &b, Mass::status current, int &best_x, int &best_y)
+{
+	if(limit-- == 0) return 0;
+	Mass::status next = (current == Mass::ENEMY) ? Mass::PLAYER : Mass::ENEMY;
+	//死活問題
+	int r = b.calc_result();
+	if (r == current) return +10000;
+	if (r == next) return -10000;
+	if (r == Board::DRAW) return 0;
+
+	int a = alpha, b = beta;
+
+	for (int y = 0: y < Board::BOARD_SIZE; y++){
+		for(int x = 0; x < Board::BOARD_SIZE;x++){
+		Mass &m = b.mass_[y][x];
+		if(m.getStatus() != Mass::BLANK) continue:
+
+		m.setStatus(current);
+		int dummy;
+		int score = -evalute(limit, -b, -a, board, next, dummy, dummy);
+		if (a < score && score < beta && !(x == 0 && y == 0) && limit <= 2)
+		{
+			a = -evalute(limit, -beta, -score, board, next, dummy,dummy);
+		}
+		m.setStatus(Mass::BLANK);
+
+		if(a < score){
+			a = score;
+			best_x;
+			best_y;
+		}
+		if (beta <= a){
+			return a;
+		}
+
+		b = a+1;
+		}
+	}
+}
 class Game
 {
 private:
@@ -236,7 +390,24 @@ public:
 
 
 
+bool AI=AI_alpha_beta::think(Board &b)
+{
+	int best_x, best_y;
 
+	if (evalute (-10000, 10000, b, Mass::ENEMY, best_x,best_y) <= -9999)
+	return false;
+
+return b.mass_[best_y][best_x].put(Mass::ENEMY);
+}
+bool AI_nega_scout::think(Board &b)
+{
+	int best_x,best_y;
+
+	if(evalute(5, -10000,10000, b, Mass::ENEMY, best_x, best_y) <= -9999)
+	return false;
+
+return b.mass_[best_y][best_x].put(Mass::ENEMY);
+}
 void show_start_message()
 {
 	std::cout << "========================" << std::endl;
